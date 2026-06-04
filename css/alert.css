@@ -1,0 +1,237 @@
+@font-face {
+  font-family: fontx;
+  src: url(../fonts/regular.otf);
+}
+@font-face {
+  font-family: fontx;
+  src: url(../fonts/bold.otf);
+  font-weight: 700;
+}
+
+/* ============================================================
+   חלון התרעה "צבע שחור" — Material 3 (dark), פריסה אנכית
+   [מיקום] → [הערה] → [מפה] → [כפתורים]
+   ============================================================ */
+:root {
+  --primary: #ffd500;
+  --on-primary: #1f1c00;
+  --bg: #121216;
+  --surface: #17181d;
+  --surface-2: #23242c;
+  --surface-3: #2a2b34;
+  --on-surface: #e7e7ec;
+  --on-surface-var: #a8aab5;
+  --outline: rgba(255, 255, 255, 0.10);
+}
+
+* {
+  font-family: fontx, "Heebo", "Segoe UI", "Helvetica", sans-serif;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  direction: rtl;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== בלוק עליון: לוגו + סוג אירוע + מיקום ===== */
+#alert-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  background: var(--surface);
+  flex: 0 0 auto;
+}
+
+#logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex: 0 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+#head-text {
+  min-width: 0;
+  flex: 1;
+}
+
+#eventTitle {
+  margin: 0;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+#locationText {
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--on-surface);
+  word-break: break-word;
+}
+
+/* ===== הערה ===== */
+.alert-note {
+  flex: 0 0 auto;
+  background: var(--surface-2);
+  border-right: 3px solid var(--primary);
+  padding: 9px 14px;
+  margin: 0 16px 10px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--on-surface);
+  max-height: 84px;
+  overflow-y: auto;
+}
+
+.alert-note[hidden] {
+  display: none;
+}
+
+/* ===== פס מרחק (מעל המפה) — מתמלא תוך כדי שההתראה כבר מוצגת ===== */
+.distance-bar {
+  flex: 0 0 auto;
+  background: var(--surface-2);
+  border-right: 3px solid var(--primary);
+  padding: 8px 14px;
+  margin: 0 16px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--on-surface);
+  text-align: center;
+}
+
+.distance-bar[hidden] {
+  display: none;
+}
+
+/* ===== מפה (תופסת את רוב הגובה) ===== */
+#map {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  background-color: var(--surface);
+  z-index: 0;
+}
+
+/* ===== נעץ מותג (divIcon) ===== */
+.bc-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--primary);
+  border: 2px solid #1a1a1f;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.bc-pin svg {
+  transform: rotate(45deg);
+  color: var(--on-primary);
+}
+
+/* ===== נעץ "המיקום שלך" (נקודה כחולה עם הילה) ===== */
+.bc-userpin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4c8dff;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgba(76, 141, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== כפתורי תחתית (M3) ===== */
+#menu-container {
+  display: flex;
+  gap: 8px;
+  background: var(--surface-2);
+  padding: 8px;
+  flex: 0 0 auto;
+}
+
+.button {
+  cursor: pointer;
+  color: var(--on-surface);
+  flex: 1;
+  text-align: center;
+  padding: 11px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--surface-3);
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.button:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.button.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ===== חיווי "האירוע הסתיים" — באנר עליון + הבהוב עדין של החלון כולו ===== */
+/* הבהוב עדין: רקע הגוף נושם בין הרקע הרגיל לגוון מעט בהיר יותר, כדי שהמשתמש ישים לב שהאירוע נגמר */
+@keyframes bc-ended-flash {
+  0%,
+  100% {
+    background: var(--bg);
+  }
+  50% {
+    background: #2a2b34;
+  }
+}
+
+body.event-ended {
+  animation: bc-ended-flash 1.1s ease-in-out infinite;
+}
+
+.event-ended-banner {
+  flex: 0 0 auto;
+  background: var(--surface-3);
+  color: var(--on-surface);
+  text-align: center;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.event-ended-banner[hidden] {
+  display: none;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  background-color: var(--surface-3);
+}

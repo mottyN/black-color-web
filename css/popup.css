@@ -1,0 +1,699 @@
+@font-face {
+  font-family: fontx;
+  src: url(../fonts/regular.otf);
+}
+@font-face {
+  font-family: fontx;
+  src: url(../fonts/bold.otf);
+  font-weight: 700;
+}
+
+/* ============================================================
+   "צבע שחור" — ערכת Material 3 (dark), RTL, אקסנט צהוב
+   ============================================================ */
+:root {
+  --primary: #ffd500;
+  --on-primary: #1f1c00;
+  --bg: #121216;
+  --surface: #17181d;
+  --surface-1: #1d1e25;
+  --surface-2: #23242c;
+  --surface-3: #2a2b34;
+  --on-surface: #e7e7ec;
+  --on-surface-var: #a8aab5;
+  --outline: rgba(255, 255, 255, 0.09);
+  --outline-strong: rgba(255, 255, 255, 0.18);
+  --danger: #ff8a73;
+  --ok: #4ade80;
+  --state-hover: rgba(255, 255, 255, 0.06);
+  --state-press: rgba(255, 255, 255, 0.11);
+  --primary-state: rgba(255, 213, 0, 0.12);
+  --radius-l: 20px;
+  --radius-m: 16px;
+  --radius-s: 12px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  font-family: fontx, "Segoe UI", "Heebo", sans-serif;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 400px;
+  margin: 0;
+  direction: rtl;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: radial-gradient(130% 60% at 50% -8%, var(--surface-1) 0%, var(--bg) 60%);
+}
+
+/* ===== מבנה מסכים + גובה דינמי ===== */
+#app {
+  width: 400px;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  max-height: 560px;
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+.screen-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 14px 16px;
+}
+
+/* ===== Top app bar ===== */
+.appbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 12px 8px;
+  flex: 0 0 auto;
+}
+
+.appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#settingsScreen .appbar {
+  justify-content: flex-start;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.brand-name,
+.appbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--on-surface-var);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--state-hover);
+  color: var(--on-surface);
+}
+
+.icon-btn:active {
+  background: var(--state-press);
+}
+
+/* ===== מחוון חיבור לשרת ===== */
+.conn-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--on-surface-var); /* "בודק…" עד תשובה ראשונה */
+  box-shadow: 0 0 0 3px transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.conn-dot.ok {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18);
+}
+
+.conn-dot.down {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 138, 115, 0.18);
+}
+
+.conn-popover {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 10px;
+  z-index: 30;
+  background: var(--surface-3);
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+}
+
+.conn-popover[hidden] {
+  display: none;
+}
+
+.conn-popover .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-left: 7px;
+  vertical-align: 0;
+}
+
+/* ===== היסטוריה ===== */
+#history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 6px;
+}
+
+.history_item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.history_item:hover {
+  background: var(--surface-3);
+}
+
+.history_item:active {
+  transform: scale(0.99);
+}
+
+.history_item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.hi-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-3);
+  color: var(--on-surface-var);
+}
+
+.hi-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.hi-icon[data-event="0"] {
+  background: rgba(255, 213, 0, 0.16);
+  color: var(--primary);
+}
+
+.hi-icon[data-event="2"] {
+  background: rgba(120, 180, 255, 0.16);
+  color: #8fc0ff;
+}
+
+.hi-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hi-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--on-surface);
+  line-height: 1.3;
+}
+
+.hi-time {
+  font-size: 11.5px;
+  color: var(--primary);
+  margin-top: 3px;
+  direction: rtl;
+}
+
+.hi-cities {
+  font-size: 13.5px;
+  color: var(--on-surface);
+  margin-top: 3px;
+  word-break: break-word;
+}
+
+.hi-note {
+  font-size: 12.5px;
+  color: var(--on-surface-var);
+  margin-top: 5px;
+  padding-right: 9px;
+  border-right: 2px solid var(--outline-strong);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.history_empty {
+  text-align: center;
+  color: var(--on-surface-var);
+  font-size: 14px;
+  padding: 48px 12px;
+}
+
+/* ===== קבוצות הגדרות ===== */
+.group {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--outline);
+}
+
+.group:last-child {
+  border-bottom: none;
+}
+
+.group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 4px;
+  letter-spacing: 0.3px;
+}
+
+.group-sub {
+  font-size: 12.5px;
+  color: var(--on-surface-var);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+/* ===== שדה חיפוש (filled) ===== */
+.search-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 14px;
+  background: var(--surface-2);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-s);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.search-row:focus-within {
+  border-color: var(--primary);
+  background: var(--surface-1);
+}
+
+.search-icon {
+  display: flex;
+  color: var(--on-surface-var);
+  flex: 0 0 auto;
+}
+
+#search {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--on-surface);
+  font-size: 15px;
+}
+
+#search::placeholder {
+  color: var(--on-surface-var);
+}
+
+/* ===== Autocomplete ===== */
+#autocomplete {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--surface-3);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow);
+  padding: 4px;
+}
+
+.ac-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: right;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--on-surface);
+  cursor: pointer;
+}
+
+.ac-option:hover,
+.ac-option.focused {
+  background: var(--state-hover);
+}
+
+.ac-city {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ac-area {
+  font-size: 12px;
+  color: var(--on-surface-var);
+}
+
+.ac-area.is-area {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ===== צ'יפים נבחרים (input chips) ===== */
+#selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#selected .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: 6px 12px 6px 6px;
+  font-size: 13.5px;
+  color: var(--on-surface);
+}
+
+#selected .chip.is-area {
+  color: var(--primary);
+}
+
+#selected .chip-x {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--on-surface-var);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+#selected .chip-x:hover {
+  background: var(--danger);
+  color: #2a1208;
+}
+
+#selected .empty {
+  width: 100%;
+  text-align: center;
+  color: var(--on-surface-var);
+  font-size: 13px;
+  padding: 4px 0;
+  line-height: 1.5;
+}
+
+/* ===== כפתור טקסט (נקה בחירה) ===== */
+.text-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.text-btn:hover {
+  background: var(--primary-state);
+}
+
+/* ===== M3 Switch ===== */
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.switch-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.switch-label {
+  display: block;
+  font-size: 14px;
+  color: var(--on-surface);
+}
+
+.switch-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--on-surface-var);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.switch {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+
+.switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.switch .track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 2px solid var(--outline-strong);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.switch .thumb {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--on-surface-var);
+  transform: translateY(-50%);
+  transition: right 0.2s ease, width 0.2s ease, height 0.2s ease, background 0.2s ease;
+}
+
+.switch input:checked + .track {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.switch input:checked + .track .thumb {
+  right: 24px;
+  width: 24px;
+  height: 24px;
+  background: var(--on-primary);
+}
+
+.switch-row[style*="0.5"] {
+  /* disabled state (opacity set inline by JS) */
+}
+
+/* ===== Filter chips (סוג אירוע) ===== */
+.chip-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--outline-strong);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--on-surface);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-chip:hover {
+  background: var(--state-hover);
+}
+
+.filter-chip .chip-check {
+  width: 0;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  transition: width 0.15s ease;
+}
+
+.filter-chip.selected {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.filter-chip.selected .chip-check {
+  width: 16px;
+}
+
+/* ===== כפתור filled (בדיקת התראה) ===== */
+.filled-btn {
+  display: block;
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.1s ease;
+}
+
+.filled-btn:hover {
+  filter: brightness(1.05);
+}
+
+.filled-btn:active {
+  transform: scale(0.99);
+}
+
+/* ===== אודות ===== */
+.about {
+  text-align: center;
+}
+
+.about-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.about-text {
+  font-size: 13px;
+  color: var(--on-surface-var);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ===== Sound Picker ===== */
+.sound-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sound-select {
+  flex: 1;
+  background: var(--surface-2);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-strong);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a8aab5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 10px center;
+  padding-left: 32px;
+}
+
+.sound-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  background-color: var(--surface-3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3a3b46;
+}
