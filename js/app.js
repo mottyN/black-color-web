@@ -485,7 +485,11 @@ async function trackAndShowVisits() {
       fields[dk + '_unique']    = { integerValue: String(n(dk + '_unique') + 1) };
     }
 
-    await fetch(docUrl, {
+    // updateMask — עדכן רק את השדות הנוכחיים, אל תמחק שאר השדות!
+    const maskParams = Object.keys(fields)
+      .map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
+      .join('&');
+    await fetch(`${docUrl}&${maskParams}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields }),
