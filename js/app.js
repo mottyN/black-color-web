@@ -13,49 +13,8 @@ var countdownInterval;
 
 
 // ============================================================
-// Firestore — היסטוריה משותפת לכל המשתמשים
+// Firestore — קריאה בלבד (כתיבה רק ע"י Cloud Function)
 // ============================================================
-let db = null;
-
-(function initFirebase() {
-  try {
-    if (
-      typeof FIREBASE_CONFIG === 'undefined' ||
-      FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID'
-    ) return; // config לא הוגדר עדיין
-    firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.firestore();
-  } catch (e) {
-    console.warn('[צבע שחור] Firebase init error:', e);
-  }
-})();
-
-async function saveAlertToFirestore(alert) {
-  // השמירה בפועל נעשית ע"י ה-Cloud Function — הלקוח לא צריך לכתוב ל-Firestore
-  // (נשארת כ-fallback למקרה שה-Function לא עלה עדיין)
-  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
-  if (!alert?.notificationId) return;
-  try {
-    const project = FIREBASE_CONFIG.projectId;
-    const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/alerts/${alert.notificationId}?key=${FIREBASE_CONFIG.apiKey}`;
-    const toVal = v => typeof v === 'number' ? { doubleValue: v } : { stringValue: String(v ?? '') };
-    const body = {
-      fields: {
-        notificationId: toVal(alert.notificationId),
-        time:           { integerValue: alert.time || Math.floor(Date.now() / 1000) },
-        cities:         { arrayValue: { values: (alert.cities || []).map(c => ({ stringValue: c })) } },
-        eventType:      { integerValue: alert.eventType ?? 8 },
-        address:        toVal(alert.address || ''),
-        note:           toVal(alert.note    || ''),
-        ...(typeof alert.lat === 'number' ? { lat: { doubleValue: alert.lat } } : {}),
-        ...(typeof alert.lng === 'number' ? { lng: { doubleValue: alert.lng } } : {}),
-      }
-    };
-    await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
-  } catch (e) {
-    console.warn('[צבע שחור] Firestore REST write error:', e.message);
-  }
-}
 
 async function loadHistoryFromFirestore(limit = 500) {
   if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return [];
@@ -279,8 +238,6 @@ async function getAlerts(alert, source, testAlert = false) {
   currentCities      = currentCities.concat(alertCities);
   currentAlertCities = currentAlertCities.concat(alertCities);
 
-  // שמירה ל-Firestore (לא בדיקות)
-  if (!testAlert) saveAlertToFirestore(alert);
 
   const desktop = await Preferences.getSelectedDesktop();
   if (desktop && alertCities.length && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
