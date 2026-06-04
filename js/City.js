@@ -206,7 +206,9 @@ class City {
     }
 
     if (!City.loadedSync) City.POLYGONS = JSON.parse(localStorage.getItem("polygonsJSON") || "{}");
-    if (
+    if (!POLYGONS_JSON_URL) {
+      // polygons לא זמינים — מדלגים (לא קריטי לתפקוד)
+    } else if (
       (localStorage.getItem("polygonsVersion") || -1) == polygonsVersion &&
       City.POLYGONS != null &&
       City.POLYGONS != undefined &&
@@ -231,7 +233,7 @@ class City {
         localStorage.setItem("polygonsVersion", polygonsVersion);
         console.log("polygons was loaded successfully from server.");
       }
-    }
+    } // end polygons block
     City.loadAllIsraelPolygon()
   }
 

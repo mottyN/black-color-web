@@ -21,10 +21,10 @@ function initLiveMap() {
     liveMap.attributionControl.setPrefix('');
     liveMap.attributionControl.setPosition('bottomleft');
 
-    // טיילס כהים (CartoDB Dark Matter)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // OpenStreetMap — לא חסום ע"י NetFree
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap © CARTO',
+      attribution: '© OpenStreetMap',
     }).addTo(liveMap);
 
     L.control.zoom({ position: 'bottomright' }).addTo(liveMap);

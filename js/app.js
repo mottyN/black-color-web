@@ -175,33 +175,70 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================
-// Polling
+// Polling — דרך Firestore REST API בלבד (עובד דרך NetFree)
+// ה-Cloud Function פולל את black-alert.com ושומר ל-Firestore.
+// האתר קורא מ-Firestore כל 10 שניות לחפש אירועים חדשים.
 // ============================================================
-async function checkListsVersion({ polygons, cities }) {
-  await Promise.allSettled([
-    Preferences.setPolygonsVersion(polygons),
-    Preferences.setCitiesVersion(cities),
-  ]);
-  await City.loadData();
-}
+let lastPollTime = Math.floor(Date.now() / 1000) - 60; // מתחיל דקה אחורה
 
-async function fetchAndCheckLists() {
-  const data = await fetch(LISTS_VERSIONS_URL).then(r => r.json());
-  if (data.polygons && data.cities) await checkListsVersion(data);
-}
-
-setInterval(() => fetchAndCheckLists().catch(() => null), 24 * 60 * 60 * 1000);
-
-async function pollNotifications() {
+async function pollFirestore() {
+  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
   try {
-    const res    = await fetch(NOTIFICATIONS_API_URL);
+    const project = FIREBASE_CONFIG.projectId;
+    // שולף התרעות שהזמן שלהן גדול מ-lastPollTime (אירועים פעילים)
+    const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:runQuery?key=${FIREBASE_CONFIG.apiKey}`;
+    const body = {
+      structuredQuery: {
+        from: [{ collectionId: 'alerts' }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: 'time' },
+            op: 'GREATER_THAN_OR_EQUAL',
+            value: { integerValue: lastPollTime }
+          }
+        },
+        orderBy: [{ field: { fieldPath: 'time' }, direction: 'ASCENDING' }],
+      }
+    };
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok) throw new Error(res.status);
-    const events = await res.json();
-    lastOkTime   = Date.now();
+    const rows = await res.json();
+
+    lastOkTime = Date.now();
     connectionStatus = 0;
-    pollFailures     = 0;
-    for (const ev of events) getAlerts(ev, 'poll');
-  } catch (_) {
+    pollFailures = 0;
+
+    (Array.isArray(rows) ? rows : []).forEach(row => {
+      if (!row.document) return;
+      const f   = row.document.fields || {};
+      const get = (k, def) => {
+        const v = f[k];
+        if (!v) return def;
+        return v.stringValue ?? v.integerValue ?? v.doubleValue ?? def;
+      };
+      const ev = {
+        notificationId: get('notificationId', String(Math.random())),
+        time:           Number(get('time', 0)),
+        cities:         (f.cities?.arrayValue?.values || []).map(v => v.stringValue || ''),
+        eventType:      Number(get('eventType', 8)),
+        address:        get('address', ''),
+        note:           get('note', ''),
+        version:        Number(get('version', 1)),
+      };
+      if (f.lat) ev.lat = Number(f.lat.doubleValue ?? f.lat.integerValue ?? 0);
+      if (f.lng) ev.lng = Number(f.lng.doubleValue ?? f.lng.integerValue ?? 0);
+
+      // מעדכן את lastPollTime לאחר העיבוד
+      if (ev.time > lastPollTime) lastPollTime = ev.time;
+
+      getAlerts(ev, 'firestore');
+    });
+  } catch (e) {
     pollFailures++;
     if (Date.now() - lastOkTime > WATCHDOG_MS) connectionStatus = 1;
   }
@@ -216,7 +253,7 @@ function scheduleNextPoll() {
 }
 
 async function runPollCycle() {
-  await pollNotifications();
+  await pollFirestore();
   scheduleNextPoll();
 }
 
@@ -392,8 +429,7 @@ window.addEventListener('load', async () => {
   // אתחול מפה חיה
   if (typeof initLiveMap === 'function') initLiveMap();
 
-  await fetchAndCheckLists().catch(() => null);
-  runPollCycle(); // מתחיל את לולאת ה-polling
+  runPollCycle(); // polling דרך Firestore REST
 
   const desktop = await Preferences.getSelectedDesktop();
   if (desktop && typeof Notification !== 'undefined' && Notification.permission === 'default') {
