@@ -414,10 +414,21 @@ const isAdmin = new URLSearchParams(location.search).get('admin') === ADMIN_SECR
 // ---- זיהוי מבקר / סשן ----
 const SESSION_MS = 30 * 60 * 1000; // סשן = 30 דקות ללא פעילות
 
-// גרסה 2 — v2 מאפס tracking ישן שנבנה כשהיו שגיאות בקוד
-const STORE_VID  = '_bc_vid2';
-const STORE_LAST = '_bc_last2';
-const STORE_SEEN = '_bc_seen2';
+// שנה TRACKING_VER כדי לאפס tracking בכל הדפדפנים (למשל אחרי מחיקת Firestore)
+const TRACKING_VER = 'v3';
+const STORE_VID    = '_bc_vid';
+const STORE_LAST   = '_bc_last';
+const STORE_SEEN   = '_bc_seen';
+const STORE_VER    = '_bc_ver';
+
+function resetTrackingIfVersionChanged() {
+  if (localStorage.getItem(STORE_VER) !== TRACKING_VER) {
+    localStorage.removeItem(STORE_SEEN);
+    localStorage.removeItem(STORE_LAST);
+    localStorage.removeItem(STORE_VID);
+    localStorage.setItem(STORE_VER, TRACKING_VER);
+  }
+}
 
 function getVisitorId() {
   let id = localStorage.getItem(STORE_VID);
@@ -449,7 +460,8 @@ async function trackAndShowVisits() {
   const docUrl  = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/stats/visits?key=${apiKey}`;
   const dk      = 'd' + new Date().toISOString().slice(0,10).replace(/-/g,''); // d20260604
 
-  const newVisitor = isFirstEverVisit();  // true = מבקר חדש לגמרי (לפי localStorage v2)
+  resetTrackingIfVersionChanged();        // מאפס localStorage אם הגרסה השתנתה
+  const newVisitor = isFirstEverVisit();  // true = מבקר חדש לגמרי
   const newSession = checkSession() || newVisitor; // מבקר חדש = גם סשן חדש
 
   try {
