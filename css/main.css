@@ -748,24 +748,37 @@ input, select { font-family: inherit; }
   box-shadow: 0 8px 24px rgba(0,0,0,.5);
 }
 .admin-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--primary);
+  margin-bottom: 12px;
+}
+.admin-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--on-surface-var);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 10px;
+  letter-spacing: 0.7px;
+  margin: 8px 0 4px;
+}
+.admin-divider {
+  height: 1px;
+  background: var(--outline);
+  margin: 10px 0 6px;
 }
 .admin-row {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--on-surface);
-  padding: 4px 0;
+  padding: 3px 0;
 }
 .admin-row span:last-child {
   font-weight: 700;
   color: var(--primary);
+  min-width: 32px;
+  text-align: left;
 }
 
 /* footer */

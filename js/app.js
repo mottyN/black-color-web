@@ -411,41 +411,94 @@ function triggerTestAlert() {
 const ADMIN_SECRET = 'motty2025';
 const isAdmin = new URLSearchParams(location.search).get('admin') === ADMIN_SECRET;
 
+// ---- זיהוי מבקר / סשן ----
+const SESSION_MS = 30 * 60 * 1000; // סשן = 30 דקות ללא פעילות
+
+function getVisitorId() {
+  let id = localStorage.getItem('_bc_vid');
+  if (!id) {
+    id = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('_bc_vid', id);
+  }
+  return id;
+}
+
+function checkSession() {
+  const now       = Date.now();
+  const lastVisit = Number(localStorage.getItem('_bc_last') || 0);
+  const isNew     = (now - lastVisit) > SESSION_MS;
+  localStorage.setItem('_bc_last', String(now));
+  return isNew; // true = סשן חדש
+}
+
+function isFirstEverVisit() {
+  const existed = localStorage.getItem('_bc_seen');
+  if (!existed) localStorage.setItem('_bc_seen', '1');
+  return !existed;
+}
+
 async function trackAndShowVisits() {
   if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
   const project = FIREBASE_CONFIG.projectId;
   const apiKey  = FIREBASE_CONFIG.apiKey;
   const docUrl  = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/stats/visits?key=${apiKey}`;
-  const todayKey = 'd' + new Date().toISOString().slice(0,10).replace(/-/g,''); // d20260604
+  const dk      = 'd' + new Date().toISOString().slice(0,10).replace(/-/g,''); // d20260604
+
+  const newSession = checkSession();      // true = סשן חדש
+  const newVisitor = isFirstEverVisit();  // true = מבקר חדש לגמרי
 
   try {
-    // קרא ערכים נוכחיים (404 = ביקור ראשון אי פעם)
+    // קרא ערכים נוכחיים
     const getRes = await fetch(docUrl, { signal: AbortSignal.timeout(5000) });
     const f = getRes.ok ? ((await getRes.json()).fields || {}) : {};
+    const n = k => Number(f[k]?.integerValue ?? 0);
 
-    const newTotal = Number(f.total?.[getRes.ok ? 'integerValue' : ''] ?? 0) + 1;
-    const newToday = Number(f[todayKey]?.integerValue ?? 0) + 1;
+    const fields = {
+      // צפיות
+      total:           { integerValue: String(n('total') + 1) },
+      [dk + '_views']: { integerValue: String(n(dk + '_views') + 1) },
+    };
 
-    // כתוב בחזרה (PATCH יוצר את המסמך אם לא קיים)
+    if (newSession) {
+      fields.sessions           = { integerValue: String(n('sessions') + 1) };
+      fields[dk + '_sessions']  = { integerValue: String(n(dk + '_sessions') + 1) };
+    }
+    if (newVisitor) {
+      fields.unique             = { integerValue: String(n('unique') + 1) };
+      fields[dk + '_unique']    = { integerValue: String(n(dk + '_unique') + 1) };
+    }
+
     await fetch(docUrl, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          total:      { integerValue: String(newTotal) },
-          [todayKey]: { integerValue: String(newToday) },
-        }
-      }),
+      body: JSON.stringify({ fields }),
       signal: AbortSignal.timeout(5000),
     });
 
     if (!isAdmin) return;
+
+    // הצג פאנל admin עם כל הנתונים
     const panel = document.getElementById('adminPanel');
     if (panel) panel.style.display = 'block';
-    const el  = document.getElementById('adminVisits');
-    const el2 = document.getElementById('adminToday');
-    if (el)  el.textContent  = newTotal.toLocaleString('he-IL');
-    if (el2) el2.textContent = newToday.toLocaleString('he-IL');
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = Number(val).toLocaleString('he-IL');
+    };
+
+    // קרא מחדש לקבל ערכים עדכניים
+    const res2 = await fetch(docUrl, { signal: AbortSignal.timeout(5000) });
+    if (!res2.ok) return;
+    const f2 = (await res2.json()).fields || {};
+    const n2 = k => Number(f2[k]?.integerValue ?? 0);
+
+    set('statTotal',         n2('total'));
+    set('statSessions',      n2('sessions'));
+    set('statUnique',        n2('unique'));
+    set('statTodayViews',    n2(dk + '_views'));
+    set('statTodaySessions', n2(dk + '_sessions'));
+    set('statTodayUnique',   n2(dk + '_unique'));
+
   } catch (e) {
     console.warn('[counter]', e.message);
   }
