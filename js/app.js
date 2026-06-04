@@ -415,59 +415,40 @@ async function trackAndShowVisits() {
   if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
   const project = FIREBASE_CONFIG.projectId;
   const apiKey  = FIREBASE_CONFIG.apiKey;
-  const today   = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const docUrl  = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/stats/visits?key=${apiKey}`;
+  const todayKey = 'd' + new Date().toISOString().slice(0,10).replace(/-/g,''); // d20260604
 
-  // Increment total + today via Firestore commit (atomic)
   try {
-    await fetch(
-      `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          writes: [{
-            transform: {
-              document: `projects/${project}/databases/(default)/documents/stats/visits`,
-              fieldTransforms: [
-                { fieldPath: 'total',  increment: { integerValue: 1 } },
-                { fieldPath: `days.${today}`, increment: { integerValue: 1 } },
-              ]
-            }
-          }]
-        }),
-        signal: AbortSignal.timeout(5000),
-      }
-    );
-  } catch {}
+    // קרא ערכים נוכחיים (404 = ביקור ראשון אי פעם)
+    const getRes = await fetch(docUrl, { signal: AbortSignal.timeout(5000) });
+    const f = getRes.ok ? ((await getRes.json()).fields || {}) : {};
 
-  if (!isAdmin) return;
+    const newTotal = Number(f.total?.[getRes.ok ? 'integerValue' : ''] ?? 0) + 1;
+    const newToday = Number(f[todayKey]?.integerValue ?? 0) + 1;
 
-  // הצג פאנל admin
-  const panel = document.getElementById('adminPanel');
-  if (panel) panel.style.display = 'block';
+    // כתוב בחזרה (PATCH יוצר את המסמך אם לא קיים)
+    await fetch(docUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          total:      { integerValue: String(newTotal) },
+          [todayKey]: { integerValue: String(newToday) },
+        }
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
 
-  // קרא נתונים (מנסה שוב אם 404 — המסמך עוד לא נוצר)
-  const readStats = async (attempt = 0) => {
-    try {
-      const res = await fetch(
-        `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/stats/visits?key=${apiKey}`
-      );
-      if (res.status === 404 && attempt < 3) {
-        await new Promise(r => setTimeout(r, 800));
-        return readStats(attempt + 1);
-      }
-      if (!res.ok) return;
-      const data = await res.json();
-      const f    = data.fields || {};
-      const total      = Number(f.total?.integerValue      ?? 1);
-      const todayCount = Number(f.days?.[today]?.integerValue ?? 1);
-      const el  = document.getElementById('adminVisits');
-      const el2 = document.getElementById('adminToday');
-      if (el)  el.textContent  = total.toLocaleString('he-IL');
-      if (el2) el2.textContent = todayCount.toLocaleString('he-IL');
-    } catch {}
-  };
-  readStats();
+    if (!isAdmin) return;
+    const panel = document.getElementById('adminPanel');
+    if (panel) panel.style.display = 'block';
+    const el  = document.getElementById('adminVisits');
+    const el2 = document.getElementById('adminToday');
+    if (el)  el.textContent  = newTotal.toLocaleString('he-IL');
+    if (el2) el2.textContent = newToday.toLocaleString('he-IL');
+  } catch (e) {
+    console.warn('[counter]', e.message);
+  }
 }
 
 // ניקוי currentAlertCities — שמור על רשימה קצרה
