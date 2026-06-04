@@ -6,6 +6,10 @@
   <title>צבע שחור</title>
   <link rel="icon" href="img/notify.png" />
   <script src="js/config.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <!-- Firebase SDK (compat v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/leaflet.js"></script>
   <script src="js/Preferences.js"></script>
   <script src="js/Localization.js"></script>
@@ -172,6 +176,13 @@
         <!-- בדיקה -->
         <section class="group">
           <button id="testAlert" class="filled-btn">בדיקת התראה</button>
+        </section>
+
+        <!-- ניהול היסטוריה -->
+        <section class="group">
+          <h3 class="group-title">היסטוריה שמורה</h3>
+          <p class="group-sub" id="historyCountText">טוען…</p>
+          <button id="clearHistory" class="text-btn" style="color:var(--danger)">מחיקת כל ההיסטוריה המקומית</button>
         </section>
 
         <!-- אודות -->
