@@ -296,7 +296,7 @@ input, select { font-family: inherit; }
   flex-direction: column;
   background: var(--surface);
   border-right: 1px solid var(--outline);
-  overflow: hidden;
+  overflow: hidden; /* הגלילה היא על #history בתוכו */
 }
 
 .active-banner {
@@ -335,6 +335,8 @@ input, select { font-family: inherit; }
   flex-direction: column;
   gap: 0;
   padding: 8px;
+  /* גלילה חלקה במגע */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* כרטיס היסטוריה */
@@ -831,11 +833,11 @@ input, select { font-family: inherit; }
   .header-settings-btn { padding: 0 12px; width: 36px; justify-content: center; }
   .settings-body { padding: 12px; }
 
-  /* נייד: מפה למעלה, פאנל למטה */
+  /* נייד: מפה למעלה, פאנל מתחת — הדף כולו גולל */
   .main-layout   { flex-direction: column; height: auto; overflow: visible; }
-  #liveMapPanel  { height: 45vh; }
-  #feedPanel     { width: 100%; height: auto; border-right: none; border-top: 1px solid var(--outline); }
-  #history       { max-height: 60vh; }
+  #liveMapPanel  { height: 50vh; flex-shrink: 0; }
+  #feedPanel     { width: 100%; height: auto; overflow: visible; border-right: none; border-top: 1px solid var(--outline); }
+  #history       { overflow-y: visible; max-height: none; }
 
   #alertOverlay  { align-items: flex-end; padding: 0; }
   #alertCard     { border-radius: 20px 20px 0 0; width: 100%; }
