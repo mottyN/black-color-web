@@ -461,31 +461,25 @@ async function loadHistory() {
   history = document.createElement('div');
   history.id = 'history';
 
-  // טעינה מקבילה משלושה מקורות
-  const [serverFeed, firestoreFeed] = await Promise.all([
-    fetch(ALERTS_HISTORY_URL).then(r => r.json()).catch(() => []),
+  // טעינה מ-Firestore + localStorage (לא קוראים ל-black-alert.com ישירות)
+  const [firestoreFeed] = await Promise.all([
     loadHistoryFromFirestore(),
   ]);
   const localFeed = getLocalHistory();
 
-  // dedup: notifIds + זמנים (רזולוציית דקה) של פריטי השרת
-  const serverNotifIds = new Set([
-    ...serverFeed.map(i => i._notifId),
-    ...firestoreFeed.map(i => i._notifId),
-  ].filter(Boolean));
-  const serverMinutes = new Set([
-    ...serverFeed,
-    ...firestoreFeed,
-  ].flatMap(i => (i.alerts || []).map(a => Math.floor((a.time || 0) / 60))));
+  // dedup: מניעת כפילויות בין Firestore ל-localStorage
+  const fbNotifIds = new Set(firestoreFeed.map(i => i._notifId).filter(Boolean));
+  const fbMinutes  = new Set(firestoreFeed.flatMap(i =>
+    (i.alerts || []).map(a => Math.floor((a.time || 0) / 60))
+  ));
 
-  // פריטים מקומיים שאינם ב-Firestore/שרת (fallback למקרה שFirestore לא הוגדר)
   const localOnly = localFeed.filter(item =>
-    !serverNotifIds.has(item._notifId) &&
-    !(item.alerts?.[0]?.time && serverMinutes.has(Math.floor(item.alerts[0].time / 60)))
+    !fbNotifIds.has(item._notifId) &&
+    !(item.alerts?.[0]?.time && fbMinutes.has(Math.floor(item.alerts[0].time / 60)))
   );
 
   // מיזוג + מיון לפי זמן (חדש ראשון)
-  const feed = [...serverFeed, ...firestoreFeed, ...localOnly].sort((a, b) => {
+  const feed = [...firestoreFeed, ...localOnly].sort((a, b) => {
     const tA = Math.max(...(a.alerts || []).map(x => x.time || 0));
     const tB = Math.max(...(b.alerts || []).map(x => x.time || 0));
     return tB - tA;

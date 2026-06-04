@@ -29,8 +29,10 @@ function initLiveMap() {
 
     L.control.zoom({ position: 'bottomright' }).addTo(liveMap);
 
-    // חיוני: Leaflet לא תמיד מחשב גודל נכון בטעינה
-    setTimeout(() => liveMap.invalidateSize(), 200);
+    // Leaflet דורש invalidateSize לאחר שהקונטיינר מקבל גובה סופי
+    setTimeout(() => liveMap.invalidateSize(), 100);
+    setTimeout(() => liveMap.invalidateSize(), 600);
+    setTimeout(() => liveMap.invalidateSize(), 1500);
   });
 }
 
