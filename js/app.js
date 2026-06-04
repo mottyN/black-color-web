@@ -11,45 +11,6 @@ var currentCities      = [];
 var currentAlertCities = [];
 var countdownInterval;
 
-// ============================================================
-// היסטוריה מקומית (localStorage)
-// ============================================================
-const LOCAL_HISTORY_KEY = 'localAlertHistory';
-const LOCAL_HISTORY_MAX = 2000;
-
-function saveAlertToLocalHistory(alert) {
-  if (!alert || !Array.isArray(alert.cities) || alert.cities.length === 0) return;
-  try {
-    const stored = JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '[]');
-    // dedup לפי notificationId
-    if (stored.some(item => item._notifId === alert.notificationId)) return;
-    const item = {
-      _notifId: alert.notificationId,
-      id: 'local-' + alert.notificationId,
-      alerts: [{
-        time:      alert.time || Math.floor(Date.now() / 1000),
-        cities:    alert.cities,
-        eventType: alert.eventType ?? 8,
-        address:   alert.address || '',
-        note:      alert.note    || '',
-        ...(typeof alert.lat === 'number' ? { lat: alert.lat } : {}),
-        ...(typeof alert.lng === 'number' ? { lng: alert.lng } : {}),
-      }],
-    };
-    stored.unshift(item);
-    if (stored.length > LOCAL_HISTORY_MAX) stored.length = LOCAL_HISTORY_MAX;
-    localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(stored));
-  } catch {}
-}
-
-function getLocalHistory() {
-  try { return JSON.parse(localStorage.getItem(LOCAL_HISTORY_KEY) || '[]'); }
-  catch { return []; }
-}
-
-function clearLocalHistory() {
-  localStorage.removeItem(LOCAL_HISTORY_KEY);
-}
 
 // ============================================================
 // Firestore — היסטוריה משותפת לכל המשתמשים
@@ -318,11 +279,8 @@ async function getAlerts(alert, source, testAlert = false) {
   currentCities      = currentCities.concat(alertCities);
   currentAlertCities = currentAlertCities.concat(alertCities);
 
-  // שמירה להיסטוריה (לא בדיקות)
-  if (!testAlert) {
-    saveAlertToLocalHistory(alert);   // fallback מקומי
-    saveAlertToFirestore(alert);      // שיתוף עם כל המשתמשים
-  }
+  // שמירה ל-Firestore (לא בדיקות)
+  if (!testAlert) saveAlertToFirestore(alert);
 
   const desktop = await Preferences.getSelectedDesktop();
   if (desktop && alertCities.length && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -584,25 +542,10 @@ async function loadHistory() {
   history = document.createElement('div');
   history.id = 'history';
 
-  // טעינה מ-Firestore + localStorage (לא קוראים ל-black-alert.com ישירות)
-  const [firestoreFeed] = await Promise.all([
-    loadHistoryFromFirestore(),
-  ]);
-  const localFeed = getLocalHistory();
+  // טעינה מ-Firestore בלבד
+  const firestoreFeed = await loadHistoryFromFirestore();
 
-  // dedup: מניעת כפילויות בין Firestore ל-localStorage
-  const fbNotifIds = new Set(firestoreFeed.map(i => i._notifId).filter(Boolean));
-  const fbMinutes  = new Set(firestoreFeed.flatMap(i =>
-    (i.alerts || []).map(a => Math.floor((a.time || 0) / 60))
-  ));
-
-  const localOnly = localFeed.filter(item =>
-    !fbNotifIds.has(item._notifId) &&
-    !(item.alerts?.[0]?.time && fbMinutes.has(Math.floor(item.alerts[0].time / 60)))
-  );
-
-  // מיזוג + מיון לפי זמן (חדש ראשון)
-  const feed = [...firestoreFeed, ...localOnly].sort((a, b) => {
+  const feed = [...firestoreFeed].sort((a, b) => {
     const tA = Math.max(...(a.alerts || []).map(x => x.time || 0));
     const tB = Math.max(...(b.alerts || []).map(x => x.time || 0));
     return tB - tA;
@@ -857,26 +800,6 @@ desktopNotifEl.onchange = async () => {
 silentNotSelEl.onchange = () => Preferences.saveSilentNotSelected(silentNotSelEl.checked);
 testAlertBtn.onclick    = () => triggerTestAlert();
 
-// ניהול היסטוריה מקומית
-const clearHistoryBtn   = document.getElementById('clearHistory');
-const historyCountText  = document.getElementById('historyCountText');
-
-function updateHistoryCount() {
-  const count = getLocalHistory().length;
-  if (historyCountText)
-    historyCountText.textContent = count === 0
-      ? 'אין פריטים שמורים מקומית.'
-      : `${count} התרעות שמורות מקומית (בנוסף להיסטוריית השרת).`;
-}
-
-if (clearHistoryBtn) {
-  clearHistoryBtn.onclick = () => {
-    if (!confirm('למחוק את כל ההיסטוריה המקומית השמורה?')) return;
-    clearLocalHistory();
-    updateHistoryCount();
-    loadHistory();
-  };
-}
 
 function renderEventChips() {
   eventTypeChips.querySelectorAll('.filter-chip').forEach(chip => {
@@ -943,5 +866,4 @@ async function loadSettings() {
   renderEventChips();
 
   soundSelect.value = await Preferences.getSelectedSound();
-  updateHistoryCount();
 }
