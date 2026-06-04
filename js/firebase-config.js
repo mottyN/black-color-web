@@ -29,10 +29,36 @@
 */
 
 const FIREBASE_CONFIG = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID",
+  apiKey: "AIzaSyDl_rOHweHEZBBcu_oGRW7R8teH_sz3Pvk",
+  authDomain: "tzeva-shachor.firebaseapp.com",
+  projectId: "tzeva-shachor",
+  storageBucket: "tzeva-shachor.firebasestorage.app",
+  messagingSenderId: "191585340846",
+  appId: "1:191585340846:web:86864cca19351ff9000c3f",
+  measurementId: "G-2NQ321N365"
 };
+
+
+
+
+// // Import the functions you need from the SDKs you need
+// import { initializeApp } from "firebase/app";
+// import { getAnalytics } from "firebase/analytics";
+// // TODO: Add SDKs for Firebase products that you want to use
+// // https://firebase.google.com/docs/web/setup#available-libraries
+
+// // Your web app's Firebase configuration
+// // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDl_rOHweHEZBBcu_oGRW7R8teH_sz3Pvk",
+//   authDomain: "tzeva-shachor.firebaseapp.com",
+//   projectId: "tzeva-shachor",
+//   storageBucket: "tzeva-shachor.firebasestorage.app",
+//   messagingSenderId: "191585340846",
+//   appId: "1:191585340846:web:86864cca19351ff9000c3f",
+//   measurementId: "G-2NQ321N365"
+// };
+
+// // Initialize Firebase
+// const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);

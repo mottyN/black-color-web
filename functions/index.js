@@ -23,6 +23,7 @@ exports.pollAlerts = onSchedule(
     timeZone:  'Asia/Jerusalem',
     region:    'europe-west1',    // קרוב לישראל
     memory:    '256MiB',
+    runtime:   'nodejs20',
   },
   async (_event) => {
     let events;

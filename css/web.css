@@ -1,107 +1,351 @@
-/*
-  web.css — עיצוב ספציפי לאתר (GitHub Pages).
-  דורס את popup.css ו-alert.css שנוצרו עבור תוסף (420px popup).
-*/
+/* ============================================================
+   web.css — עיצוב אתר עצמאי (GitHub Pages)
+   דורס את popup.css / alert.css שנוצרו לתוסף
+   ============================================================ */
 
-/* ===== איפוס גודל קבוע מ-popup.css ===== */
+/* ===== Reset ===== */
 html, body {
   width: 100% !important;
   height: auto !important;
   min-height: 100vh;
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  /* מבטל את flex-column של alert.css */
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  justify-content: center !important;
-  padding: 24px 16px !important;
-  background: radial-gradient(130% 60% at 50% -8%, var(--surface-1) 0%, var(--bg) 60%) fixed !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0;
+  background: var(--bg) !important;
 }
 
-/* ===== כרטיס האפליקציה הראשית ===== */
-#app {
-  width: 420px !important;
-  max-width: 100%;
-  border-radius: var(--radius-l);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
+/* ===== Header ===== */
+#siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(18, 18, 22, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--outline);
 }
 
-.screen {
-  max-height: calc(100vh - 48px) !important;
-}
-
-/* ===== Overlay התראה ===== */
-#alertOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.65);
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 68px;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.header-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.header-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.2;
+}
+
+.header-sub {
+  font-size: 11px;
+  color: var(--on-surface-var);
+  margin-top: 1px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* כפתור חיבור */
+.conn-wrap {
+  position: relative;
+}
+
+.conn-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--on-surface-var);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.conn-btn:hover { background: var(--surface-2); }
+
+#connText { color: var(--on-surface-var); }
+.conn-btn.ok #connText  { color: var(--ok); }
+.conn-btn.down #connText { color: var(--danger); }
+
+/* כפתור הגדרות */
+.header-settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--on-surface);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.header-settings-btn:hover { background: var(--surface-3); }
+
+/* ===== App shell (hidden — נשאר לצורך JS) ===== */
+#app { display: none !important; }
+
+/* ===== Main content ===== */
+#mainContent {
+  min-height: calc(100vh - 68px);
+}
+
+/* ===== History ===== */
+#historyScreen {
+  display: block !important;
+  max-height: none !important;
+}
+
+.page-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+#history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* כרטיסי היסטוריה — גדולים יותר */
+.history_item {
+  padding: 18px 22px !important;
+  gap: 16px !important;
+  border-radius: 16px !important;
+  border-right: 4px solid var(--surface-3);
+  background: var(--surface-2) !important;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s !important;
+}
+
+.history_item:hover {
+  background: var(--surface-3) !important;
+}
+
+/* צבע גבול לפי סוג אירוע */
+.history_item:has(.hi-icon[data-event="0"]) { border-right-color: var(--primary); }
+.history_item:has(.hi-icon[data-event="2"]) { border-right-color: #5b9cf6; }
+.history_item:has(.hi-icon[data-event="3"]) { border-right-color: #ff8000; }
+.history_item:has(.hi-icon[data-event="8"]) { border-right-color: var(--on-surface-var); }
+
+.hi-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 14px !important;
+  flex: 0 0 48px !important;
+}
+
+.hi-title { font-size: 16px !important; }
+.hi-cities { font-size: 14px !important; margin-top: 5px !important; }
+.hi-time { font-size: 12px !important; }
+.hi-note { font-size: 13px !important; }
+
+.history_empty {
+  padding: 80px 0 !important;
+  font-size: 15px !important;
+}
+
+/* ===== Settings — overlay ===== */
+.settings-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 500;
+  background: var(--bg);
+  overflow-y: auto;
+  display: flex !important;
+  flex-direction: column;
+}
+
+.settings-overlay[hidden] {
+  display: none !important;
+}
+
+.settings-overlay:not([hidden]) {
+  animation: settingsIn 0.22s ease;
+}
+
+@keyframes settingsIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.settings-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 0 48px;
+}
+
+.settings-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(18, 18, 22, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--outline);
+}
+
+.settings-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.settings-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* כרטיסי הגדרות */
+.settings-card {
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  padding: 20px;
+  border: 1px solid var(--outline);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 6px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.card-sub {
+  font-size: 13px;
+  color: var(--on-surface-var);
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+
+.danger-btn {
+  color: var(--danger) !important;
+}
+
+.about-card {
+  text-align: center;
+}
+
+.about-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  margin: 0 auto 12px;
+  display: block;
+}
+
+/* ===== Alert Modal ===== */
+#alertOverlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px;
 }
 
 #alertOverlay[hidden] {
   display: none !important;
 }
 
-/* כרטיס ההתראה — bottom-sheet */
 #alertCard {
-  width: 460px;
-  max-width: 100%;
-  height: min(500px, 92vh);
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  border-radius: 20px 20px 0 0;
-  overflow: hidden;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.55);
+  width: 520px !important;
+  max-width: 100% !important;
+  height: min(580px, 90vh) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--bg) !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px var(--outline-strong) !important;
+  animation: modalIn 0.26s cubic-bezier(0.34, 1.1, 0.64, 1);
 }
 
-/* המפה ממלאת את השטח הפנוי */
+@keyframes modalIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
 #alertCard #map {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-/* כפתור סגירה בהדר ההתראה */
-#alert-head {
-  position: relative;
-}
-
 #closeAlert {
   flex: 0 0 auto;
-  margin-right: -4px; /* RTL: דחוף לצד שמאל */
+  color: var(--on-surface-var);
 }
 
-/* ===== אנימציית כניסה לכרטיס ===== */
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+/* ===== Connection popover ===== */
+.conn-popover {
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  left: auto !important;
 }
 
-#alertCard {
-  animation: slideUp 0.28s cubic-bezier(0.34, 1.08, 0.64, 1) both;
-}
+/* ===== Mobile ===== */
+@media (max-width: 640px) {
+  .header-inner { padding: 0 16px; height: 58px; }
+  .header-sub { display: none; }
+  .header-settings-btn span { display: none; }
+  .header-settings-btn { padding: 0 12px; }
+  .page-inner { padding: 16px 12px 40px; }
+  .settings-body { padding: 12px; }
 
-#alertOverlay[hidden] #alertCard {
-  animation: none;
-}
-
-/* ===== Responsive: מסכים קטנים ===== */
-@media (max-width: 460px) {
-  html, body {
-    padding: 0 !important;
+  #alertOverlay {
     align-items: flex-end !important;
+    padding: 0 !important;
   }
-  #app {
+  #alertCard {
+    border-radius: 20px 20px 0 0 !important;
     width: 100% !important;
-    border-radius: var(--radius-l) var(--radius-l) 0 0 !important;
-    min-height: 100dvh;
-  }
-  .screen {
-    max-height: 100dvh !important;
+    height: min(520px, 88vh) !important;
   }
 }

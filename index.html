@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>צבע שחור</title>
+  <title>צבע שחור — התרעות בזמן אמת</title>
   <link rel="icon" href="img/notify.png" />
   <script src="js/config.js"></script>
   <script src="js/firebase-config.js"></script>
-  <!-- Firebase SDK (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/leaflet.js"></script>
@@ -24,7 +23,7 @@
 </head>
 <body>
 
-  <!-- ======== חלון התראה (overlay במקום popup נפרד) ======== -->
+  <!-- ======== Alert Modal ======== -->
   <div id="alertOverlay" hidden>
     <div id="alertCard">
       <div class="event-ended-banner" id="eventEndedBanner" hidden></div>
@@ -34,7 +33,7 @@
           <h3 id="eventTitle"></h3>
           <div id="locationText"></div>
         </div>
-        <button id="closeAlert" class="icon-btn" title="סגור" aria-label="סגור התראה">
+        <button id="closeAlert" class="icon-btn" title="סגור" aria-label="סגור">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
@@ -49,158 +48,171 @@
     </div>
   </div>
 
-  <!-- ======== אפליקציה ראשית ======== -->
-  <div id="app">
+  <!-- ======== Header ======== -->
+  <header id="siteHeader">
+    <div class="header-inner">
+      <div class="header-brand">
+        <img src="img/notify.png" alt="" class="header-logo" />
+        <div>
+          <div class="header-title">צבע שחור</div>
+          <div class="header-sub">התרעות בזמן אמת</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="conn-wrap">
+          <button id="connBtn" class="conn-btn" aria-label="מצב חיבור">
+            <span id="connDot" class="conn-dot"></span>
+            <span id="connText">בודק…</span>
+          </button>
+          <div id="connPopover" class="conn-popover" hidden></div>
+        </div>
+        <button id="openSettings" class="header-settings-btn" aria-label="הגדרות">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>
+          </svg>
+          <span>הגדרות</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======== App Shell (נשאר לצורך app.js) ======== -->
+  <div id="app" style="display:none"></div>
+
+  <!-- ======== Main ======== -->
+  <main id="mainContent">
 
     <!-- מסך היסטוריה -->
-    <section id="historyScreen" class="screen">
-      <header class="appbar">
-        <div class="brand">
-          <img class="brand-logo" src="img/notify.png" alt="" />
-          <span class="brand-name">צבע שחור</span>
-        </div>
-        <div class="appbar-actions">
-          <button id="connBtn" class="icon-btn" title="בודק חיבור…" aria-label="מצב חיבור לשרת">
-            <span id="connDot" class="conn-dot"></span>
-          </button>
-          <button id="openSettings" class="icon-btn" title="הגדרות" aria-label="הגדרות">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" />
-            </svg>
-          </button>
-        </div>
-        <div id="connPopover" class="conn-popover" hidden>בודק חיבור…</div>
-      </header>
-      <div class="screen-body">
+    <section id="historyScreen" class="page-section">
+      <div class="page-inner">
         <div id="history"></div>
       </div>
     </section>
 
-    <!-- מסך הגדרות -->
-    <section id="settingsScreen" class="screen" hidden>
-      <header class="appbar">
-        <button id="backFromSettings" class="icon-btn" title="חזרה" aria-label="חזרה">
-          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 12h14" />
-            <path d="M12 5l7 7-7 7" />
-          </svg>
-        </button>
-        <span class="appbar-title">הגדרות</span>
-      </header>
+    <!-- מסך הגדרות (overlay) -->
+    <section id="settingsScreen" class="settings-overlay" hidden>
+      <div class="settings-inner">
+        <div class="settings-topbar">
+          <button id="backFromSettings" class="icon-btn" aria-label="חזרה">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span class="settings-title">הגדרות</span>
+        </div>
 
-      <div class="screen-body settings-body">
+        <div class="settings-body">
 
-        <!-- אזורי עניין -->
-        <section class="group">
-          <h3 class="group-title">אזורי עניין</h3>
-          <p class="group-sub">בחר יישובים/אזורים לקבלת התרעה קולית. ללא בחירה — יתקבלו התרעות בכל הארץ.</p>
-          <div id="selection">
-            <div class="search-row">
-              <span class="search-icon">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
-                </svg>
-              </span>
-              <input id="search" placeholder="חיפוש יישוב או אזור…" autocomplete="off" />
+          <!-- אזורי עניין -->
+          <div class="settings-card">
+            <h3 class="card-title">אזורי עניין</h3>
+            <p class="card-sub">בחר יישובים/אזורים לקבלת התרעה קולית. ללא בחירה — כל הארץ.</p>
+            <div id="selection">
+              <div class="search-row">
+                <span class="search-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+                  </svg>
+                </span>
+                <input id="search" placeholder="חיפוש יישוב או אזור…" autocomplete="off" />
+              </div>
+              <div id="selected"></div>
+              <button id="clear" class="text-btn">נקה בחירה</button>
             </div>
-            <div id="selected"></div>
-            <button id="clear" class="text-btn">נקה בחירה</button>
+            <label class="switch-row" id="silentNotSelectedBox">
+              <span class="switch-text">
+                <span class="switch-label">התרעות שקטות באזורים שלא נבחרו</span>
+                <span class="switch-sub">קבלת התרעות ללא צליל עבור שאר האזורים</span>
+              </span>
+              <span class="switch">
+                <input type="checkbox" id="silentNotSelected" />
+                <span class="track"><span class="thumb"></span></span>
+              </span>
+            </label>
           </div>
-          <label class="switch-row" id="silentNotSelectedBox">
-            <span class="switch-text">
-              <span class="switch-label">התרעות שקטות באזורים שלא נבחרו</span>
-              <span class="switch-sub">קבלת התרעות שקטות (ללא צליל) עבור שאר האזורים</span>
-            </span>
-            <span class="switch">
-              <input type="checkbox" id="silentNotSelected" />
-              <span class="track"><span class="thumb"></span></span>
-            </span>
-          </label>
-        </section>
 
-        <!-- סוג אירוע -->
-        <section class="group">
-          <h3 class="group-title">קבלת התרעות לפי סוג אירוע</h3>
-          <div class="chip-set" id="eventTypeChips">
-            <button type="button" class="filter-chip" data-event="3">
-              <span class="chip-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7" /></svg></span>
-              נסיון הסגרה
-            </button>
-            <button type="button" class="filter-chip" data-event="0">
-              <span class="chip-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7" /></svg></span>
-              נסיון מעצר מ.צ.
-            </button>
-            <button type="button" class="filter-chip" data-event="2">
-              <span class="chip-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7" /></svg></span>
-              התרעת מחסומים
-            </button>
+          <!-- סוג אירוע -->
+          <div class="settings-card">
+            <h3 class="card-title">סוג אירוע</h3>
+            <div class="chip-set" id="eventTypeChips">
+              <button type="button" class="filter-chip" data-event="3">
+                <span class="chip-check"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+                נסיון הסגרה
+              </button>
+              <button type="button" class="filter-chip" data-event="0">
+                <span class="chip-check"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+                נסיון מעצר מ.צ.
+              </button>
+              <button type="button" class="filter-chip" data-event="2">
+                <span class="chip-check"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+                התרעת מחסומים
+              </button>
+            </div>
           </div>
-        </section>
 
-        <!-- התראות -->
-        <section class="group">
-          <h3 class="group-title">התראות</h3>
-          <label class="switch-row">
-            <span class="switch-text">
-              <span class="switch-label">התראות מערכת ההפעלה</span>
-              <span class="switch-sub">להשתמש בהתראות מערכת (דורש אישור דפדפן)</span>
-            </span>
-            <span class="switch">
-              <input type="checkbox" id="desktopNotifications" />
-              <span class="track"><span class="thumb"></span></span>
-            </span>
-          </label>
-        </section>
-
-        <!-- צליל -->
-        <section class="group">
-          <h3 class="group-title">צליל התרעה</h3>
-          <div class="sound-picker">
-            <select id="soundSelect" class="sound-select">
-              <option value="bell2">פעמון אלקטרוני (ברירת מחדל)</option>
-              <option value="bell">פעמון</option>
-              <option value="phone">טלפון</option>
-              <option value="siren">אזעקה</option>
-              <option value="alarm">אלרם</option>
-              <option value="ding">צלצול</option>
-            </select>
-            <button id="previewSound" class="icon-btn" title="השמע דוגמה" aria-label="השמע דוגמה">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-            </button>
+          <!-- התראות -->
+          <div class="settings-card">
+            <h3 class="card-title">התראות</h3>
+            <label class="switch-row">
+              <span class="switch-text">
+                <span class="switch-label">התראות מערכת ההפעלה</span>
+                <span class="switch-sub">התרעות גם כשהאתר ברקע (דורש אישור)</span>
+              </span>
+              <span class="switch">
+                <input type="checkbox" id="desktopNotifications" />
+                <span class="track"><span class="thumb"></span></span>
+              </span>
+            </label>
           </div>
-        </section>
 
-        <!-- בדיקה -->
-        <section class="group">
-          <button id="testAlert" class="filled-btn">בדיקת התראה</button>
-        </section>
+          <!-- צליל -->
+          <div class="settings-card">
+            <h3 class="card-title">צליל התרעה</h3>
+            <div class="sound-picker">
+              <select id="soundSelect" class="sound-select">
+                <option value="bell2">פעמון אלקטרוני (ברירת מחדל)</option>
+                <option value="bell">פעמון</option>
+                <option value="phone">טלפון</option>
+                <option value="siren">אזעקה</option>
+                <option value="alarm">אלרם</option>
+                <option value="ding">צלצול</option>
+              </select>
+              <button id="previewSound" class="icon-btn" title="השמע דוגמה">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
 
-        <!-- ניהול היסטוריה -->
-        <section class="group">
-          <h3 class="group-title">היסטוריה שמורה</h3>
-          <p class="group-sub" id="historyCountText">טוען…</p>
-          <button id="clearHistory" class="text-btn" style="color:var(--danger)">מחיקת כל ההיסטוריה המקומית</button>
-        </section>
+          <!-- בדיקה -->
+          <div class="settings-card">
+            <button id="testAlert" class="filled-btn">בדיקת התראה</button>
+          </div>
 
-        <!-- אודות -->
-        <section class="group about">
-          <img class="about-logo" src="img/notify.png" alt="" />
-          <h3 class="group-title">אודות</h3>
-          <p class="about-text">
-            מערכת "צבע שחור" מתריעה בזמן אמת על ניסיונות מעצר ופעילות אכיפה —
-            לתמיכה ועידוד ללומדי התורה. המערכת אינה קשורה אל צבע שחור, והיא פועלת באופן עצמאי.
-          </p>
-          <p class="about-text" style="margin-top:8px; font-size:11px;">
-            האתר מבצע polling מהשרת כל עוד הלשונית פתוחה. לקבלת התרעות ברקע, התקן את תוסף הכרום.
-          </p>
-        </section>
+          <!-- היסטוריה -->
+          <div class="settings-card">
+            <h3 class="card-title">היסטוריה שמורה</h3>
+            <p class="card-sub" id="historyCountText">טוען…</p>
+            <button id="clearHistory" class="text-btn danger-btn">מחיקת היסטוריה מקומית</button>
+          </div>
 
+          <!-- אודות -->
+          <div class="settings-card about-card">
+            <img src="img/notify.png" alt="" class="about-logo" />
+            <h3 class="card-title">אודות</h3>
+            <p class="card-sub">
+              מערכת "צבע שחור" מתריעה בזמן אמת על ניסיונות מעצר ופעילות אכיפה —
+              לתמיכה ועידוד ללומדי התורה. המערכת פועלת באופן עצמאי.
+            </p>
+          </div>
+
+        </div>
       </div>
     </section>
-  </div>
+
+  </main>
 
   <script src="js/alertMap.js"></script>
   <script src="js/app.js"></script>

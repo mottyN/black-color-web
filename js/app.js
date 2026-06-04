@@ -386,14 +386,12 @@ const historyScreen  = document.getElementById('historyScreen');
 const settingsScreen = document.getElementById('settingsScreen');
 
 document.getElementById('openSettings').onclick = () => {
-  historyScreen.hidden  = true;
   settingsScreen.hidden = false;
-  settingsScreen.querySelector('.screen-body').scrollTop = 0;
+  document.querySelector('.settings-inner')?.scrollTo(0, 0);
 };
 
 document.getElementById('backFromSettings').onclick = () => {
   settingsScreen.hidden = true;
-  historyScreen.hidden  = false;
   loadHistory();
 };
 
@@ -401,7 +399,7 @@ document.getElementById('backFromSettings').onclick = () => {
 const ICON_EVENT_TYPES = [0, 2, 3, 8];
 
 async function loadHistory() {
-  const homeBody = historyScreen.querySelector('.screen-body');
+  const homeBody = document.querySelector('.page-inner') || historyScreen;
   let history = document.getElementById('history');
   if (history) history.remove();
   history = document.createElement('div');
@@ -732,12 +730,16 @@ const connDot     = document.getElementById('connDot');
 const connPopover = document.getElementById('connPopover');
 
 function setConnUI(connected) {
-  const text  = connected ? 'מחובר לשרת' : 'מנותק מהשרת';
+  const text  = connected ? 'מחובר' : 'מנותק';
   connDot.classList.toggle('ok',   connected);
   connDot.classList.toggle('down', !connected);
-  connBtn.title = text;
+  connBtn.classList.toggle('ok',   connected);
+  connBtn.classList.toggle('down', !connected);
+  connBtn.title = connected ? 'מחובר לשרת' : 'מנותק מהשרת';
+  const connTextEl = document.getElementById('connText');
+  if (connTextEl) connTextEl.textContent = text;
   const color = connected ? 'var(--ok)' : 'var(--danger)';
-  connPopover.innerHTML     = `<span class="dot" style="background:${color}"></span>` + text;
+  connPopover.innerHTML     = `<span class="dot" style="background:${color}"></span>` + (connected ? 'מחובר לשרת' : 'מנותק מהשרת');
   connPopover.dataset.state = connected ? 'ok' : 'down';
 }
 
