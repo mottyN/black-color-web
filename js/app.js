@@ -279,6 +279,9 @@ async function getAlerts(alert, source, testAlert = false) {
     notifyDesktop(alertCities);
   }
 
+  // עדכון מפה חיה
+  if (typeof updateLiveMapMarkers === 'function') updateLiveMapMarkers(currentCities);
+
   // תמיד גם מציגים overlay
   showAlertOverlay();
   if (typeof alertsListener === 'function') alertsListener(currentCities);
@@ -296,6 +299,7 @@ async function getAlerts(alert, source, testAlert = false) {
 function finishAlert() {
   currentCities = currentAlertCities = [];
   if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  if (typeof clearLiveMapMarkers === 'function') clearLiveMapMarkers();
   closeAlertOverlay();
 }
 
@@ -371,6 +375,9 @@ window.addEventListener('load', async () => {
   allAreas     = await City.getAllAreas();
   await loadSettings().catch(console.error);
   loadHistory();
+
+  // אתחול מפה חיה
+  if (typeof initLiveMap === 'function') initLiveMap();
 
   await fetchAndCheckLists().catch(() => null);
   runPollCycle(); // מתחיל את לולאת ה-polling
