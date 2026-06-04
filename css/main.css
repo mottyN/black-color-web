@@ -296,7 +296,8 @@ input, select { font-family: inherit; }
   flex-direction: column;
   background: var(--surface);
   border-right: 1px solid var(--outline);
-  overflow: hidden; /* הגלילה היא על #history בתוכו */
+  overflow: hidden;
+  min-height: 0; /* חיוני: בלי זה overflow-y לא עובד ב-flex */
 }
 
 .active-banner {
@@ -330,12 +331,12 @@ input, select { font-family: inherit; }
 
 #history {
   flex: 1;
+  min-height: 0; /* חיוני: מאפשר overflow-y בתוך flex */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0;
   padding: 8px;
-  /* גלילה חלקה במגע */
   -webkit-overflow-scrolling: touch;
 }
 
