@@ -12,21 +12,16 @@
   הקובץ נטען *ראשון* בכל מסמך שצורך אותו (backgroundPage / popup / alert),
   כך ש-SERVER_BASE_URL זמין כמשתנה גלובלי ל-City.js ול-background.js.
 */
-const SERVER_BASE_URL = "https://black-alert.com";
+// Firebase Functions proxy — מונע CORS (השרת קורא ל-black-alert.com, לא הדפדפן)
+const FIREBASE_PROJECT_ID = 'tzeva-shachor';
+const FIREBASE_REGION     = 'europe-west1';
+const FUNCTIONS_BASE      = `https://${FIREBASE_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net`;
 
-// חיווי בולט אם נשארה כתובת פיתוח — מונע אריזת פרודקשן עם localhost בלי לשים לב.
-if (/^https?:\/\/(localhost|127\.0\.0\.1)/.test(SERVER_BASE_URL)) {
-  console.warn(
-    '[צבע שחור] config.js: SERVER_BASE_URL מצביע ל-localhost (מצב פיתוח). ' +
-      "החלף לדומיין פרודקשן + עדכן host_permissions לפני אריזה."
-  );
-}
+// כל הבקשות הדינמיות עוברות דרך Firebase Functions (ללא CORS)
+const NOTIFICATIONS_API_URL = `${FUNCTIONS_BASE}/notifications`;
+const LISTS_VERSIONS_URL    = `${FUNCTIONS_BASE}/listsVersions`;
+const ALERTS_HISTORY_URL    = `${FUNCTIONS_BASE}/alertsHistory`;
 
-// נקודות הקצה הנגזרות (אין WebSocket — polling בלבד, SPEC §4.6).
-const NOTIFICATIONS_API_URL = `${SERVER_BASE_URL}/notifications`;
-const LISTS_VERSIONS_URL    = `${SERVER_BASE_URL}/lists-versions`;
-const ALERTS_HISTORY_URL    = `${SERVER_BASE_URL}/alerts-history`;
-
-// קבצים סטטיים — מאוחסנים מקומית בריפו כדי לעקוף CORS
+// קבצים סטטיים — מאוחסנים בריפו
 const CITIES_JSON_URL   = '/black-color-web/static/cities.json';
 const POLYGONS_JSON_URL = '/black-color-web/static/polygons.json';
