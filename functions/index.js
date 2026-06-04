@@ -55,6 +55,53 @@ exports.listsVersions = functions.region(REGION).https.onRequest(async (req, res
   } catch (e) { res.status(502).json({}); }
 });
 
+// ===== ייבוא היסטוריה מלאה מ-black-alert.com ל-Firestore =====
+// קריאה: GET https://europe-west1-tzeva-shachor.cloudfunctions.net/syncHistory
+exports.syncHistory = functions.region(REGION).https.onRequest(async (req, res) => {
+  setCors(res);
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  try {
+    const r = await fetch(`${BLACK}/alerts-history`, { signal: AbortSignal.timeout(30000) });
+    if (!r.ok) { res.status(502).json({ error: 'upstream error', status: r.status }); return; }
+    const items = await r.json();
+    if (!Array.isArray(items)) { res.status(502).json({ error: 'bad response' }); return; }
+
+    let saved = 0, skipped = 0;
+    // מעבד ב-chunks של 400 (מגבלת Firestore batch)
+    const chunks = [];
+    for (let i = 0; i < items.length; i += 400) chunks.push(items.slice(i, i + 400));
+
+    for (const chunk of chunks) {
+      const batch = db.batch();
+      for (const item of chunk) {
+        if (!item || !Array.isArray(item.alerts) || item.alerts.length === 0) { skipped++; continue; }
+        const alert = item.alerts[0];
+        const notifId = String(item.id || ('hist-' + alert.time));
+        const data = {
+          notificationId: notifId,
+          time:      alert.time || 0,
+          cities:    Array.isArray(alert.cities) ? alert.cities : [],
+          eventType: alert.eventType ?? alert.threat ?? 8,
+          address:   alert.address || '',
+          note:      alert.note    || '',
+          fromHistory: true,
+        };
+        if (typeof alert.lat === 'number') data.lat = alert.lat;
+        if (typeof alert.lng === 'number') data.lng = alert.lng;
+        batch.set(db.collection('alerts').doc(notifId), data, { merge: true });
+        saved++;
+      }
+      await batch.commit();
+    }
+
+    console.log(`syncHistory: saved=${saved} skipped=${skipped}`);
+    res.json({ ok: true, saved, skipped, total: items.length });
+  } catch (e) {
+    console.error('syncHistory error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== Polling scheduled — v1 pubsub (ללא בעיות IAM של v2) =====
 const seenKeys = [];
 
