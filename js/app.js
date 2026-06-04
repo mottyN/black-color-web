@@ -323,7 +323,7 @@ function triggerTestAlert() {
 // ============================================================
 // מונה כניסות — Firestore REST (גלוי רק עם ?admin=motty2025)
 // ============================================================
-const ADMIN_SECRET = 'motty2025';
+const ADMIN_SECRET = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG.adminKey) || '';
 const isAdmin = new URLSearchParams(location.search).get('admin') === ADMIN_SECRET;
 
 // ---- זיהוי מבקר / סשן ----

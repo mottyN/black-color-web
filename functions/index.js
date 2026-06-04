@@ -57,9 +57,16 @@ exports.listsVersions = functions.region(REGION).https.onRequest(async (req, res
 
 // ===== ייבוא היסטוריה מלאה מ-black-alert.com ל-Firestore =====
 // קריאה: GET https://europe-west1-tzeva-shachor.cloudfunctions.net/syncHistory
+const SYNC_SECRET = process.env.SYNC_SECRET || 'change-me-in-firebase-env';
+
 exports.syncHistory = functions.region(REGION).https.onRequest(async (req, res) => {
   setCors(res);
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  // בדיקת מפתח סודי — רק מי שיודע את הסוד יכול להפעיל
+  if (req.query.secret !== SYNC_SECRET) {
+    res.status(403).json({ error: 'Forbidden' });
+    return;
+  }
   try {
     const r = await fetch(`${BLACK}/alerts-history`, { signal: AbortSignal.timeout(30000) });
     if (!r.ok) { res.status(502).json({ error: 'upstream error', status: r.status }); return; }
