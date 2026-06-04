@@ -405,6 +405,64 @@ function triggerTestAlert() {
   }, 'test', true);
 }
 
+// ============================================================
+// מונה כניסות — Firestore REST (גלוי רק עם ?admin=motty2025)
+// ============================================================
+const ADMIN_SECRET = 'motty2025';
+const isAdmin = new URLSearchParams(location.search).get('admin') === ADMIN_SECRET;
+
+async function trackAndShowVisits() {
+  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
+  const project = FIREBASE_CONFIG.projectId;
+  const apiKey  = FIREBASE_CONFIG.apiKey;
+  const today   = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  // Increment total + today via Firestore commit (atomic)
+  try {
+    await fetch(
+      `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents:commit?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          writes: [{
+            transform: {
+              document: `projects/${project}/databases/(default)/documents/stats/visits`,
+              fieldTransforms: [
+                { fieldPath: 'total',  increment: { integerValue: 1 } },
+                { fieldPath: `days.${today}`, increment: { integerValue: 1 } },
+              ]
+            }
+          }]
+        }),
+        signal: AbortSignal.timeout(5000),
+      }
+    );
+  } catch {}
+
+  if (!isAdmin) return;
+
+  // הצג פאנל admin
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.style.display = 'block';
+
+  // קרא נתונים
+  try {
+    const res  = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/stats/visits?key=${apiKey}`
+    );
+    if (!res.ok) return;
+    const data  = await res.json();
+    const f     = data.fields || {};
+    const total = f.total?.integerValue ?? '–';
+    const todayCount = f.days?.[today]?.integerValue ?? '0'; // היום כבר נספר
+    const el = document.getElementById('adminVisits');
+    const el2 = document.getElementById('adminToday');
+    if (el)  el.textContent  = Number(total).toLocaleString('he-IL');
+    if (el2) el2.textContent = Number(todayCount).toLocaleString('he-IL');
+  } catch {}
+}
+
 // ניקוי currentAlertCities — שמור על רשימה קצרה
 setInterval(() => {
   currentAlertCities = currentAlertCities.filter(c => Date.now() - c.timestamp * 1000 < 3 * 60 * 1000);
@@ -428,6 +486,9 @@ window.addEventListener('load', async () => {
 
   // אתחול מפה חיה
   if (typeof initLiveMap === 'function') initLiveMap();
+
+  // מונה כניסות
+  trackAndShowVisits();
 
   runPollCycle(); // polling דרך Firestore REST
 

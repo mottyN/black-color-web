@@ -732,6 +732,42 @@ input, select { font-family: inherit; }
   letter-spacing: 0.3px;
 }
 
+/* ===== Admin panel ===== */
+#adminPanel {
+  position: fixed;
+  bottom: 56px;
+  left: 16px;
+  z-index: 900;
+}
+#adminCard {
+  background: var(--surface-3);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-m);
+  padding: 14px 18px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+.admin-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+}
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--on-surface);
+  padding: 4px 0;
+}
+.admin-row span:last-child {
+  font-weight: 700;
+  color: var(--primary);
+}
+
 /* footer */
 #siteFooter {
   background: var(--surface);
