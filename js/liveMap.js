@@ -8,21 +8,30 @@ var liveMarkers = {};
 
 function initLiveMap() {
   if (liveMap) return;
+  const container = document.getElementById('liveMapContainer');
+  if (!container) return;
 
-  liveMap = L.map('liveMapContainer', { zoomControl: false })
-    .setView([31.5, 34.85], 7);
+  // Leaflet דורש שהקונטיינר יהיה גלוי ועם גובה לפני האתחול
+  requestAnimationFrame(() => {
+    liveMap = L.map('liveMapContainer', {
+      zoomControl: false,
+      attributionControl: true,
+    }).setView([31.5, 34.85], 7);
 
-  liveMap.attributionControl.setPrefix('');
-  liveMap.attributionControl.setPosition('bottomleft');
+    liveMap.attributionControl.setPrefix('');
+    liveMap.attributionControl.setPosition('bottomleft');
 
-  // טיילס כהים (CartoDB Dark Matter)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap © CARTO',
-  }).addTo(liveMap);
+    // טיילס כהים (CartoDB Dark Matter)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap © CARTO',
+    }).addTo(liveMap);
 
-  // כפתור zoom מותאם
-  L.control.zoom({ position: 'bottomright' }).addTo(liveMap);
+    L.control.zoom({ position: 'bottomright' }).addTo(liveMap);
+
+    // חיוני: Leaflet לא תמיד מחשב גודל נכון בטעינה
+    setTimeout(() => liveMap.invalidateSize(), 200);
+  });
 }
 
 function getLivePinColor(eventType) {

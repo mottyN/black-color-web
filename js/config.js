@@ -24,7 +24,9 @@ if (/^https?:\/\/(localhost|127\.0\.0\.1)/.test(SERVER_BASE_URL)) {
 
 // נקודות הקצה הנגזרות (אין WebSocket — polling בלבד, SPEC §4.6).
 const NOTIFICATIONS_API_URL = `${SERVER_BASE_URL}/notifications`;
-const LISTS_VERSIONS_URL = `${SERVER_BASE_URL}/lists-versions`;
-const CITIES_JSON_URL = `${SERVER_BASE_URL}/static/cities.json`;
-const POLYGONS_JSON_URL = `${SERVER_BASE_URL}/static/polygons.json`;
-const ALERTS_HISTORY_URL = `${SERVER_BASE_URL}/alerts-history`;
+const LISTS_VERSIONS_URL    = `${SERVER_BASE_URL}/lists-versions`;
+const ALERTS_HISTORY_URL    = `${SERVER_BASE_URL}/alerts-history`;
+
+// קבצים סטטיים — מאוחסנים מקומית בריפו כדי לעקוף CORS
+const CITIES_JSON_URL   = '/black-color-web/static/cities.json';
+const POLYGONS_JSON_URL = '/black-color-web/static/polygons.json';

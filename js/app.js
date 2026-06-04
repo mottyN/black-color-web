@@ -70,49 +70,62 @@ let db = null;
 })();
 
 async function saveAlertToFirestore(alert) {
-  if (!db || !alert?.notificationId) return;
+  // השמירה בפועל נעשית ע"י ה-Cloud Function — הלקוח לא צריך לכתוב ל-Firestore
+  // (נשארת כ-fallback למקרה שה-Function לא עלה עדיין)
+  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return;
+  if (!alert?.notificationId) return;
   try {
-    await db.collection('alerts').doc(alert.notificationId).set({
-      notificationId: alert.notificationId,
-      time:      alert.time || Math.floor(Date.now() / 1000),
-      cities:    Array.isArray(alert.cities) ? alert.cities : [],
-      eventType: alert.eventType ?? 8,
-      address:   alert.address || '',
-      note:      alert.note    || '',
-      ...(typeof alert.lat === 'number' ? { lat: alert.lat } : {}),
-      ...(typeof alert.lng === 'number' ? { lng: alert.lng } : {}),
-      savedAt:   firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true }); // merge: לא ידרוס אם כבר קיים
+    const project = FIREBASE_CONFIG.projectId;
+    const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/alerts/${alert.notificationId}?key=${FIREBASE_CONFIG.apiKey}`;
+    const toVal = v => typeof v === 'number' ? { doubleValue: v } : { stringValue: String(v ?? '') };
+    const body = {
+      fields: {
+        notificationId: toVal(alert.notificationId),
+        time:           { integerValue: alert.time || Math.floor(Date.now() / 1000) },
+        cities:         { arrayValue: { values: (alert.cities || []).map(c => ({ stringValue: c })) } },
+        eventType:      { integerValue: alert.eventType ?? 8 },
+        address:        toVal(alert.address || ''),
+        note:           toVal(alert.note    || ''),
+        ...(typeof alert.lat === 'number' ? { lat: { doubleValue: alert.lat } } : {}),
+        ...(typeof alert.lng === 'number' ? { lng: { doubleValue: alert.lng } } : {}),
+      }
+    };
+    await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
   } catch (e) {
-    console.warn('[צבע שחור] Firestore write error:', e);
+    console.warn('[צבע שחור] Firestore REST write error:', e.message);
   }
 }
 
-async function loadHistoryFromFirestore(limit = 1000) {
-  if (!db) return [];
+async function loadHistoryFromFirestore(limit = 500) {
+  if (!FIREBASE_CONFIG || FIREBASE_CONFIG.projectId === 'YOUR_PROJECT_ID') return [];
+  // REST API במקום SDK — עובד גם כש-NetFree חוסם את ה-SDK WebSocket
   try {
-    const snap = await db.collection('alerts')
-      .orderBy('time', 'desc')
-      .limit(limit)
-      .get();
-    return snap.docs.map(doc => {
-      const d = doc.data();
+    const project = FIREBASE_CONFIG.projectId;
+    const url = `https://firestore.googleapis.com/v1/projects/${project}/databases/(default)/documents/alerts` +
+                `?orderBy=time%20desc&pageSize=${limit}&key=${FIREBASE_CONFIG.apiKey}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.documents || []).map(doc => {
+      const f = doc.fields || {};
+      const get = (k, def) => f[k]?.stringValue ?? f[k]?.integerValue ?? f[k]?.doubleValue ?? def;
+      const cities = (f.cities?.arrayValue?.values || []).map(v => v.stringValue || '');
       return {
-        id:       'fb-' + doc.id,
-        _notifId: d.notificationId,
+        id:       'fb-' + doc.name.split('/').pop(),
+        _notifId: get('notificationId', ''),
         alerts:   [{
-          time:      d.time,
-          cities:    d.cities || [],
-          eventType: d.eventType ?? 8,
-          address:   d.address || '',
-          note:      d.note    || '',
-          ...(typeof d.lat === 'number' ? { lat: d.lat } : {}),
-          ...(typeof d.lng === 'number' ? { lng: d.lng } : {}),
+          time:      Number(get('time', 0)),
+          cities,
+          eventType: Number(get('eventType', 8)),
+          address:   get('address', ''),
+          note:      get('note', ''),
+          ...(f.lat ? { lat: Number(f.lat.doubleValue ?? f.lat.integerValue) } : {}),
+          ...(f.lng ? { lng: Number(f.lng.doubleValue ?? f.lng.integerValue) } : {}),
         }],
       };
     });
   } catch (e) {
-    console.warn('[צבע שחור] Firestore read error:', e);
+    console.warn('[צבע שחור] Firestore REST error:', e.message);
     return [];
   }
 }
