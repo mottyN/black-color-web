@@ -29,7 +29,7 @@
 */
 
 // adminKey — מפתח גישה לפאנל הסטטיסטיקות (?admin=VALUE)
-const ADMIN_KEY = 'Tz3v4Sh4ch0r!St4ts#2026';
+const ADMIN_KEY = 'Tz3v4Sh4ch0r!St4ts';
 
 const FIREBASE_CONFIG = {
   adminKey: ADMIN_KEY,
